@@ -1,174 +1,115 @@
-Notea — Carnet de notes multimédia
+Notea — Plateforme d’apprentissage légère (Laravel + HTML/CSS/JS)
 
-📝 Description du projet
+Notea centralise le cycle d’apprentissage : cours → sources d’étude → prises de notes → projets → remises → feedback → amélioration.
+Objectif : une interface sobre, fiable et facile à expliquer, pensée pour les étudiants et enseignants.
 
-Notea centralise les notes d’étude dans une interface simple : chaque note possède un titre, un contenu texte et, au besoin, une pièce jointe (image, PDF, audio…). Les tags permettent d’organiser par thèmes, tandis que la recherche et les filtres aident à retrouver l’information en quelques secondes. Le projet privilégie la sobriété, l’accessibilité et la fiabilité pour un usage étudiant quotidien.
+🎯 Description du projet
 
-🎯 Objectifs
+Problème : contenus d’étude éparpillés (PDF, liens, notes personnelles, consignes de projets) ⇒ perte de temps et suivi difficile.
 
-Centraliser les contenus (notes + pièces jointes).
+Solution : une plateforme unique pour structurer les cours et sources, noter avec contexte (tags, PJ), remettre des projets et améliorer grâce au feedback enseignant, le tout avec une recherche + filtres rapides.
 
-Organiser via des tags cohérents et réutilisables.
+👥 Rôles
 
-Retrouver rapidement l’information (recherche + filtres).
+Étudiant : s’inscrit aux cours, consulte les sources, crée des notes (tags + pièces jointes), remet des projets, applique le feedback.
 
-Rester simple côté technique pour une maintenance facile et un apprentissage clair.
+Enseignant : crée les cours, publie les sources, définit les projets, commente/évalue les remises, propose des pistes d’amélioration.
 
-👥 Public cible
+Invité (option) : lecture seule via lien signé et temporaire.
 
-Étudiants (prise de notes, révisions, projets).
+⚙️ Fonctionnalités principales (MVP)
 
-Enseignants/tuteurs (consultation) — optionnel.
+Cours & Sources
 
-⚙️ Fonctionnalités (MVP)
+Créer des cours et y associer des sources (PDF, vidéos, liens).
 
-Notes : créer, lire, modifier, supprimer.
+Lister/consulter les ressources d’un cours.
 
-Tags : associer plusieurs tags à une note.
+Notes & Tags
 
-Recherche : mot-clé sur le titre et/ou le contenu.
+CRUD des notes reliées à un cours et/ou à une source.
 
-Filtres : filtrage par tag (combinable avec la recherche).
+Tags multiples par note, recherche (titre + contenu) et filtres par tags (logique ET).
 
-Pièce jointe : fichier optionnel lié à une note (image, PDF, audio, etc.).
+Pièces jointes (image/PDF/audio) avec aperçu HTML.
 
-🧭 Utilisation (parcours simple)
+Historique des versions d’une note + restauration.
 
-Se connecter à son espace privé.
+Projets & Remises
 
-Créer une note : titre, contenu, tags, pièce jointe (optionnel).
+Définir des projets (consignes, fichiers exemples).
 
-Consulter la liste : lancer une recherche par mot-clé et/ou filtrer par tag.
+Remettre un travail (fichier ou lien) avec statut Brouillon → Soumis → Révisé.
 
-Modifier ou supprimer une note si nécessaire.
+Feedback & Amélioration
 
-🧰 Technologies & utilité
-Backend
+Feedback enseignant (commentaire + score optionnel).
 
-PHP 8.2+
-Langage serveur mature et répandu, idéal pour un CRUD fiable et des validations solides.
+Items d’amélioration (to-dos cochables) pour guider la révision.
 
-Laravel 11
-Cadre applicatif qui structure le projet et accélère le développement :
+Partage sécurisé
 
-Routing & Controllers : logique claire pour les actions (création, édition, suppression).
+Lien signé (lecture seule, expiration automatique) pour partager une note/remise.
 
-Eloquent ORM : mapping propre entre tables PostgreSQL et modèles (User, Note, Tag, Attachment + pivot note_tag).
+💡 Valeur ajoutée
 
-FormRequest (Validation) : règles serveur (champs requis, formats, tailles fichiers) → données propres.
+Contexte fort : notes reliées aux cours/sources → on retrouve mieux, plus vite.
 
-Policies (RBAC) : sécurité applicative (un utilisateur gère ses propres notes).
+Apprentissage itératif : versions + feedback + items d’amélioration → progression visible.
 
-Storage : gestion des pièces jointes (chemins, visibilité, types).
+Simplicité pédagogique : parcours linéaires, choix techniques faciles à justifier.
 
-Resources (option) : formatage JSON propre si besoin d’API.
+🧰 Technologies utilisées
 
-Laravel Sanctum (si requis)
-Authentification simple pour protéger les pages privées.
+Back-end : PHP 8.2+, Laravel 11
 
-Base de données
+Routing & Controllers (convention REST), Eloquent ORM (relations claires),
 
-PostgreSQL 16
-SGBD robuste : intégrité référentielle, index pour accélérer recherche/tri, support JSON si on veut des métadonnées flexibles.
+FormRequest (validations), Policies (RBAC simple),
 
-Front 
+Storage public (uploads + aperçus), URLs signées (partage sécurisé).
 
-HTML
-Templates Blade sémantiques et accessibles (titres, listes, formulaires).
+Base de données : SQLite (démo) ou MySQL/PostgreSQL (prod).
 
-CSS
-Styles propres, responsive, contrastes lisibles, focus visible pour le clavier.
+Front-end : Blade, HTML5, CSS3, JavaScript vanilla (interactions légères).
 
-JavaScript 
-Interactions légères (recherche instantanée côté UI, filtres, feedbacks) sans complexité de framework.
+Outils : Git & GitHub (versions, issues), (option) Vite pour les assets.
 
-Outils
+🧠 Modèle conceptuel (vue d’ensemble)
 
-Vite — Build et optimisation des assets (CSS/JS) pour un front rapide.
+User (rôle student / teacher)
 
-Git & GitHub — Versioning, issues, pull requests, documentation.
+Course, Enrollment (User↔Course)
 
-📁 Structure du projet (vue d’ensemble)
+Resource (PDF/vidéo/lien) liée à Course
 
-app/Models : User, Note, Tag, Attachment (+ pivot note_tag).
+Note (User, référence optionnelle → Course/Resource) + Tag (pivot note_tag)
 
-app/Http/Controllers : logique CRUD (Notes, Tags, Attachments).
+Attachment (fichiers liés à Note), NoteVersion
 
-app/Http/Requests : validations (FormRequest) pour des données fiables.
+Project (par Course) → Submission (par Student)
 
-database/migrations : tables users, notes, tags, note_tag, attachments.
+Feedback (par Teacher sur Submission) → ImprovementItem (to-dos)
 
-resources/views : pages Blade (liste, détail, formulaires).
+✅ Qualités non fonctionnelles
 
-resources/css & resources/js : styles et JS “vanilla”.
+Accessibilité : HTML sémantique, labels, focus visible, navigation clavier.
 
-routes/web.php : pages et formulaires (accès après login).
+Sécurité : validations serveur, policies, CSRF, liens signés en lecture seule.
 
-routes/api.php : (option) endpoints JSON si nécessaire.
+Performance : pagination, index DB, requêtes simples (LIKE/ILIKE).
 
-public/storage : lien vers les fichiers uploadés.
+Maintenabilité : structure MVC claire, relations Eloquent explicites.
 
-♿ Accessibilité & qualité
+🗺️ Roadmap (suggestion courte)
 
-Navigation au clavier, focus visible, textes et labels explicites.
+V1 : Cours & Sources, Notes & Tags (recherche/filtres, PJ, versions), Projets & Remises, Feedback & Items, Partage signé.
 
-Contrastes lisibles, tailles de police adaptées.
+V1.1 : Corbeille (SoftDeletes), Export PDF/ZIP.
 
-Messages d’erreur clairs (validation serveur).
+V2 : Recherche enrichie (pg_trgm / FULLTEXT), rubriques d’évaluation avancées, tableaux de bord.
 
-Code organisé (contrôleurs, requêtes, modèles, policies) et maintenable.
+🎤 Prompt (à mettre en bas du repo ou à réciter à l’oral)
 
-🗺️ Roadmap (suggestion)
-
-Itération 1 : Auth, CRUD Notes/Tags, pivot Note-Tag.
-
-Itération 2 : Recherche + filtres, pièces jointes.
-
-Itération 3 : Dashboard simple, A11y renforcée, petites améliorations UX.
-
-Itération 4 : Optimisations (index DB, pagination), tests et doc utilisateur.
-
-🎤 Prompt / Pitch
-
-Notea est un carnet de notes web minimaliste et robuste (Laravel + PostgreSQL) qui transforme le chaos de tes cours en savoir exploitable : crée des notes claires (texte + pièce jointe), organise-les avec des tags cohérents, puis retrouve l’essentiel en quelques secondes grâce à la recherche et aux filtres. Simple à utiliser, accessible et fiable — pour réviser mieux, produire plus vite et rester concentré sur l’essentiel.
-
----
-```mermaid
-erDiagram
-  User ||--o{ Note : "écrit"
-  Note ||--o{ NoteTag : "est_tagguée"
-  Tag  ||--o{ NoteTag : "contient"
-  Note ||--o{ Attachment : "a"
-
-  User {
-    bigint id PK
-    string name
-    string email
-    string password
-  }
-
-  Note {
-    bigint id PK
-    bigint user_id FK
-    string title
-    text   content
-    datetime created_at
-    datetime updated_at
-  }
-
-  Tag {
-    bigint id PK
-    string name
-  }
-
-  NoteTag {
-    bigint note_id FK
-    bigint tag_id  FK
-  }
-
-  Attachment {
-    bigint id PK
-    bigint note_id FK
-    string path
-    string mime_type
-  }
+Prompt / Pitch
+« Notea est une plateforme d’apprentissage légère en Laravel + HTML/CSS/JS qui relie tout le cycle d’étude : cours, sources, notes (avec tags & pièces jointes), projets, remises, puis feedback enseignant avec items d’amélioration. Les notes sont reliées à leur contexte (cours/source) pour être retrouvées en secondes grâce à la recherche et aux filtres. On garde un historique des versions pour prouver la progression et on peut partager en lecture seule via un lien signé. Les choix techniques sont simples et pédagogiques (Eloquent, FormRequest, Policies, Storage) pour un produit sobre, fiable et présentable à un jury. »
