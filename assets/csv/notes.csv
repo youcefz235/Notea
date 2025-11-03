@@ -1,0 +1,3 @@
+o:resource_template,dcterms:title,dcterms:description,dcterms:creator,dcterms:date,notea:aboutResource,notea:hasTags,notea:versionNumber
+Notea – Note,Repères balises,"Rappels <header> <main> <footer>",Étudiant,2025-01-15,Poly HTML,html|structure|base,1
+Notea – Note,Jointures simples,"SELECT ... JOIN",Étudiant,2025-02-05,Intro SQL,sql|join|exercices,1
