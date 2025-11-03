@@ -1,0 +1,35 @@
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix notea: <https://notea.schema/vocab#> .
+
+notea:Vocabulary a skos:ConceptScheme ;
+  dcterms:title "Notea – Vocabulaire Omeka S" ;
+  dcterms:creator "Mohamed Ali Mokabli" ;
+  dcterms:description "Classes & propriétés pour Cours, Sources, Notes, Projets, Remises et Feedback." ;
+  dcterms:created "2025-11-03"^^xsd:date .
+
+# Classes
+notea:Course          a rdfs:Class ; rdfs:label "Cours" .
+notea:Resource        a rdfs:Class ; rdfs:label "Source d’étude" .
+notea:Note            a rdfs:Class ; rdfs:label "Note" .
+notea:Tag             a rdfs:Class ; rdfs:label "Tag" .
+
+# Propriétés
+notea:belongsToCourse a rdf:Property ;
+  rdfs:label "Appartient au cours" ;
+  rdfs:domain notea:Resource ; rdfs:range notea:Course .
+
+notea:aboutResource a rdf:Property ;
+  rdfs:label "À propos de la source" ;
+  rdfs:domain notea:Note ; rdfs:range notea:Resource .
+
+notea:hasTags a rdf:Property ;
+  rdfs:label "Tags" ;
+  rdfs:domain notea:Note ; rdfs:range notea:Tag .
+
+notea:versionNumber a rdf:Property ;
+  rdfs:label "Numéro de version" ;
+  rdfs:domain notea:Note ; rdfs:range xsd:integer .
