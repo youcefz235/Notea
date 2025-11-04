@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Omeka S API — Lire & Créer des items</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#fafafa; --fg:#1f2328; --muted:#6e7781; --ok:#0a7a42; --err:#b00020; --bd:#e5e7eb; }
+    html,body{background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0}
+    header,main{max-width:900px;margin:24px auto;padding:0 16px}
+    h1{margin:.2rem 0 1rem}
+    .grid{display:grid;gap:16px}
+    .card{background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 1px 0 rgba(0,0,0,.03);padding:16px}
+    label{display:block;margin:8px 0 6px;font-weight:600}
+    input,select,textarea,button{
+      width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:#fff
+    }
+    textarea{resize:vertical}
+    button{cursor:pointer;background:#111827;color:#fff;border:none}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .muted{color:var(--muted);font-size:.9rem}
+    .ok{color:var(--ok)} .err{color:var(--err);white-space:pre-wrap}
+    ul{padding-left:18px;margin:.6rem 0}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Omeka S API — Lecture & Création d’items</h1>
+    <p class="muted">Cette page utilise <strong>fetch</strong> + l’API REST d’Omeka S. 
+      Place-la derrière <span class="mono">http://localhost/…</span> (pas <span class="mono">file://</span>), 
+      et configure les constantes dans le script.</p>
+  </header>
+
+  <main class="grid">
+    <!-- Lecture -->
+    <section class="card">
+      <h2>1) Lire les items</h2>
+      <div class="row">
+        <div>
+          <label for="tplId">Filtrer par modèle de ressource (optionnel)</label>
+          <input id="tplId" placeholder="ex : 123 (ID du modèle)">
+        </div>
+        <div>
+          <label for="searchQ">Recherche plein texte (optionnel)</label>
+          <input id="searchQ" placeholder="mots-clés…">
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label for="perPage">Par page</label>
+          <select id="perPage">
+            <option>10</option><option selected>25</option><option>50</option><option>100</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button id="btnLoad">Charger la liste</button>
+        </div>
+      </div>
+      <p id="statusList" class="muted"></p>
+      <div id="list"></div>
+    </section>
+
+    <!-- Création -->
+    <section class="card">
+      <h2>2) Créer un item</h2>
+      <form id="createForm">
+        <label for="newTitle">Titre *</label>
+        <input id="newTitle" required placeholder="Titre de l’item">
+
+        <label for="newDesc">Description</label>
+        <textarea id="newDesc" rows="4" placeholder="Description / contenu…"></textarea>
+
+        <div class="row">
+          <div>
+            <label for="newCreator">Créateur</label>
+            <input id="newCreator" placeholder="Nom de l’auteur">
+          </div>
+          <div>
+            <label for="newDate">Date</label>
+            <input id="newDate" placeholder="YYYY-MM-DD">
+          </div>
+        </div>
+
+        <label for="newTpl">ID du modèle de ressource (optionnel)</label>
+        <input id="newTpl" placeholder="ex : 456 (ID du modèle Notea – Note)">
+
+        <div style="margin-top:10px">
+          <button id="btnCreate" type="submit">Créer l’item</button>
+        </div>
+      </form>
+      <p id="statusCreate" class="muted"></p>
+    </section>
+  </main>
+
+  <script>
+    /* ========= À ADAPTER ========= */
+    const BASE           = "http://localhost/omeka-s";       // URL de ton Omeka S (sans slash final)
+    const KEY_IDENTITY   = "ton_email_omk@exemple.com";      // Profil → Clés d’API → key_identity (souvent ton email)
+    const KEY_CREDENTIAL = "TA_CLE_API";                     // Profil → Clés d’API → key_credential
+    /* ============================ */
+
+    // utilitaires
+    const withKey = (url) => {
+      const sep = url.includes("?") ? "&" : "?";
+      return `${url}${sep}key_identity=${encodeURIComponent(KEY_IDENTITY)}&key_credential=${encodeURIComponent(KEY_CREDENTIAL)}`;
+    };
+
+    async function apiGet(path) {
+      const res = await fetch(withKey(`${BASE}${path}`), { headers: { "Accept":"application/json" }});
+      if(!res.ok) throw new Error(`GET ${path} -> ${res.status} ${res.statusText}`);
+      return res.json();
+    }
+    async function apiPost(path, data) {
+      const res = await fetch(withKey(`${BASE}${path}`), {
+        method: "POST",
+        headers: { "Accept":"application/json", "Content-Type":"application/json" },
+        body: JSON.stringify(data)
+      });
+      if(!res.ok){
+        const txt = await res.text();
+        throw new Error(`POST ${path} -> ${res.status} ${res.statusText}\n${txt}`);
+      }
+      return res.json();
+    }
+
+    // === Lecture ===
+    async function loadItems(){
+      const info = document.getElementById("statusList");
+      const box  = document.getElementById("list");
+      info.textContent = "Chargement…";
+      box.innerHTML = "";
+
+      const tplId  = document.getElementById("tplId").value.trim();
+      const q      = document.getElementById("searchQ").value.trim();
+      const pp     = document.getElementById("perPage").value;
+      const params = new URLSearchParams({ per_page: pp });
+      if(tplId) params.set("resource_template_id", tplId);
+      if(q)     params.set("search", q);
+
+      try{
+        const items = await apiGet(`/api/items?${params.toString()}`);
+        info.textContent = `Résultats : ${items.length}`;
+        if(!items.length){ box.innerHTML = "<p class='muted'>Aucun item.</p>"; return; }
+
+        const ul = document.createElement("ul");
+        items.forEach(it=>{
+          const li = document.createElement("li");
+          const title = it["o:title"] || it["dcterms:title"]?.[0]?.["@value"] || "(sans titre)";
+          const id    = it["o:id"];
+          li.innerHTML = `<strong>#${id}</strong> — ${title}`;
+          ul.appendChild(li);
+        });
+        box.appendChild(ul);
+      }catch(e){
+        info.className = "err"; info.textContent = e.message;
+      }
+    }
+
+    // === Création ===
+    async function createItem(ev){
+      ev.preventDefault();
+      const btn = document.getElementById("btnCreate");
+      const info= document.getElementById("statusCreate");
+      info.className="muted"; info.textContent="Création en cours…"; btn.disabled=true;
+
+      const title   = document.getElementById("newTitle").value.trim();
+      const desc    = document.getElementById("newDesc").value.trim();
+      const creator = document.getElementById("newCreator").value.trim();
+      const date    = document.getElementById("newDate").value.trim();
+      const tpl     = document.getElementById("newTpl").value.trim();
+
+      // JSON attendu par Omeka S
+      const data = {};
+      if(tpl) data["o:resource_template"] = { "o:id": Number(tpl) };
+      if(title)   data["dcterms:title"]       = [{ "@value": title, "type":"literal" }];
+      if(desc)    data["dcterms:description"] = [{ "@value": desc,  "type":"literal" }];
+      if(creator) data["dcterms:creator"]     = [{ "@value": creator, "type":"literal" }];
+      if(date)    data["dcterms:date"]        = [{ "@value": date, "type":"literal" }];
+
+      try{
+        const created = await apiPost("/api/items", data);
+        info.className="ok";
+        info.textContent = `✅ Item créé (#${created["o:id"]}) — ${created["o:title"] || title}`;
+        // reset simple
+        document.getElementById("createForm").reset();
+      }catch(e){
+        info.className="err"; info.textContent = e.message;
+      }finally{
+        btn.disabled=false;
+      }
+    }
+
+    // events
+    document.getElementById("btnLoad").addEventListener("click", loadItems);
+    document.getElementById("createForm").addEventListener("submit", createItem);
+
+    // auto-load
+    loadItems();
+  </script>
+</body>
+</html>
